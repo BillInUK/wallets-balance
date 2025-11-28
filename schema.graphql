@@ -273,3 +273,9 @@ type ReceiptWallet @entity(immutable: false) {
   createdBlock: BigInt!
   createdTimestamp: BigInt!
 }
+
+type TotalBalance @entity(immutable: false) {
+  id: ID! # 固定为"total"
+  totalUSDT: BigInt!
+  totalUSDC: BigInt!
+}

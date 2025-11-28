@@ -1,3 +1,4 @@
+import { BigInt, log } from "@graphprotocol/graph-ts"
 import {
   Approval as ApprovalEvent,
   RoleAdminChanged as RoleAdminChangedEvent,
@@ -11,6 +12,7 @@ import {
   RoleAdminChanged,
   RoleGranted,
   RoleRevoked,
+  TotalBalance,
   Transfer,
 } from "../generated/schema"
 
@@ -89,21 +91,50 @@ export function handleTransfer(event: TransferEvent): void {
   entity.save()
 }
 
-// 新增：USDC Transfer事件处理器
+// 封装TotalBalance加载逻辑
+function getOrCreateTotalBalance(): TotalBalance {
+  let totalBalance = TotalBalance.load("total");
+  if (!totalBalance) {
+    totalBalance = new TotalBalance("total");
+    totalBalance.totalUSDT = BigInt.zero();
+    totalBalance.totalUSDC = BigInt.zero();
+  }
+  return totalBalance;
+}
+
+// USDT Transfer事件处理器
 export function handleUsdcTransfer(event: TransferEvent): void {
+  log.info("MockUSDC Transfer: to={}, from={}, value={}", [
+    event.params.to.toHex(),
+    event.params.from.toHex(),
+    event.params.value.toString()
+  ]);
+
+  const totalBalance = getOrCreateTotalBalance();
+  const value = event.params.value;
+
   // 处理转入
   const toWalletId = event.params.to.toHex();
   let receiptWallet = ReceiptWallet.load(toWalletId);
   if (receiptWallet) {
-    receiptWallet.usdcBalance = receiptWallet.usdcBalance.plus(event.params.value);
+    receiptWallet.usdcBalance = receiptWallet.usdcBalance.plus(value);
     receiptWallet.save();
+    log.info("Updated USDC balance for TO {}: {}", [toWalletId, receiptWallet.usdcBalance.toString()]);
+    totalBalance.totalUSDC = totalBalance.totalUSDC.plus(value);
   }
 
-  // 处理转出
+  // 处理转出（防负数）
   const fromWalletId = event.params.from.toHex();
   receiptWallet = ReceiptWallet.load(fromWalletId);
   if (receiptWallet) {
-    receiptWallet.usdcBalance = receiptWallet.usdcBalance.minus(event.params.value);
+    receiptWallet.usdcBalance = receiptWallet.usdcBalance.minus(value);
     receiptWallet.save();
+    log.info("Updated USDC balance for FROM {}: {}", [fromWalletId, receiptWallet.usdcBalance.toString()]);
+    
+    const newtotalUSDC = totalBalance.totalUSDC.minus(value);
+    totalBalance.totalUSDC = newtotalUSDC < BigInt.zero() ? BigInt.zero() : newtotalUSDC;
   }
+
+  totalBalance.save();
 }
+

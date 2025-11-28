@@ -28,7 +28,8 @@ import {
   RoleRevoked,
   TokenClaimed
 } from "../generated/schema"
-import { Bytes } from "@graphprotocol/graph-ts"
+import { BigInt, Bytes } from "@graphprotocol/graph-ts"
+import { SplitWallet, ReceiptWallet } from "../generated/schema";
 
 export function handleClaimETH(event: ClaimETHEvent): void {
   let entity = new ClaimETH(
@@ -150,20 +151,20 @@ export function handlePaymentReleased(event: PaymentReleasedEvent): void {
   entity.save()
 }
 
-export function handleReceiptWalletCreated(
-  event: ReceiptWalletCreatedEvent
-): void {
-  let entity = new ReceiptWalletCreated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.wallet = event.params.wallet
+// export function handleReceiptWalletCreated(
+//   event: ReceiptWalletCreatedEvent
+// ): void {
+//   let entity = new ReceiptWalletCreated(
+//     event.transaction.hash.concatI32(event.logIndex.toI32())
+//   )
+//   entity.wallet = event.params.wallet
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+//   entity.blockNumber = event.block.number
+//   entity.blockTimestamp = event.block.timestamp
+//   entity.transactionHash = event.transaction.hash
 
-  entity.save()
-}
+//   entity.save()
+// }
 
 export function handleRoleAdminChanged(event: RoleAdminChangedEvent): void {
   let entity = new RoleAdminChanged(
@@ -223,4 +224,27 @@ export function handleTokenClaimed(event: TokenClaimedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+}
+
+export function handleReceiptWalletCreated(event: ReceiptWalletCreatedEvent): void {
+  // 1. 创建/加载SplitWallet实体（以合约地址为ID）
+  const splitWalletId = event.address.toHex(); // SplitWallet合约地址
+  let splitWallet = SplitWallet.load(splitWalletId);
+  if (!splitWallet) {
+    splitWallet = new SplitWallet(splitWalletId);
+    splitWallet.save();
+  }
+
+  // 2. 创建ReceiptWallet实体（以子钱包地址为ID）
+  const receiptWalletId = event.params.wallet.toHex(); // 子钱包地址
+  let receiptWallet = ReceiptWallet.load(receiptWalletId);
+  if (!receiptWallet) {
+    receiptWallet = new ReceiptWallet(receiptWalletId);
+    receiptWallet.splitWallet = splitWalletId; // 关联SplitWallet
+    receiptWallet.usdtBalance = BigInt.fromI32(0); // 正确的BigInt初始化
+    receiptWallet.usdcBalance = BigInt.fromI32(0);
+    receiptWallet.createdBlock = event.block.number;
+    receiptWallet.createdTimestamp = event.block.timestamp;
+    receiptWallet.save(); // 必须调用save()！
+  }
 }

@@ -257,3 +257,19 @@ type MockUSDCTransfer @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
+# SplitWallet实体（可变，因为可能关联新的子钱包）
+type SplitWallet @entity(immutable: false) {
+  id: ID! # SplitWallet合约地址（主键）
+  receiptWallets: [ReceiptWallet!]! @derivedFrom(field: "splitWallet") # 反向关联子钱包
+}
+
+# ReceiptWallet实体（可变，余额会动态更新）
+type ReceiptWallet @entity(immutable: false) {
+  id: ID! # 子钱包地址（主键）
+  usdtBalance: BigInt! # 动态更新的余额
+  usdcBalance: BigInt!
+  splitWallet: SplitWallet! # 关联所属SplitWallet
+  createdBlock: BigInt!
+  createdTimestamp: BigInt!
+}

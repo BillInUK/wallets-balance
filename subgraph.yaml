@@ -1,0 +1,155 @@
+specVersion: 1.3.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: SplitWallet
+    network: matic
+    source:
+      address: "0x52b86e8a60e7f9918cc91600b8395ac736ac182a"
+      abi: SplitWallet
+      startBlock: 79561076
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - ClaimETH
+        - Deployed
+        - ERC20PaymentReleased
+        - ERC20TokensReleased
+        - Initialized
+        - PayeeAdded
+        - PaymentReceived
+        - PaymentReleased
+        - ReceiptWalletCreated
+        - RoleAdminChanged
+        - RoleGranted
+        - RoleRevoked
+        - TokenClaimed
+      abis:
+        - name: SplitWallet
+          file: ./abis/SplitWallet.json
+      eventHandlers:
+        - event: ClaimETH(uint256,uint256)
+          handler: handleClaimETH
+        - event: Deployed(indexed uint16,indexed uint16,uint16,uint16)
+          handler: handleDeployed
+        - event: ERC20PaymentReleased(indexed address,indexed address,uint256)
+          handler: handleERC20PaymentReleased
+        - event: ERC20TokensReleased(indexed address,address[],uint256[])
+          handler: handleERC20TokensReleased
+        - event: Initialized(uint8)
+          handler: handleInitialized
+        - event: PayeeAdded(indexed address,indexed address,indexed uint256)
+          handler: handlePayeeAdded
+        - event: PaymentReceived(indexed address,uint256)
+          handler: handlePaymentReceived
+        - event: PaymentReleased(indexed address,uint256)
+          handler: handlePaymentReleased
+        - event: ReceiptWalletCreated(indexed address)
+          handler: handleReceiptWalletCreated
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: TokenClaimed(address[],uint256[],uint256)
+          handler: handleTokenClaimed
+      file: ./src/split-wallet.ts
+  - kind: ethereum
+    name: ReceiptWalletLogic
+    network: matic
+    source:
+      address: "0x37f3461c40a9f05067585b594b8ef88eb77e1f94"
+      abi: ReceiptWalletLogic
+      startBlock: 79388910
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Claimed
+        - ReceiptWalletLogicRoleAdminChanged
+        - ReceiptWalletLogicRoleGranted
+        - ReceiptWalletLogicRoleRevoked
+      abis:
+        - name: ReceiptWalletLogic
+          file: ./abis/ReceiptWalletLogic.json
+      eventHandlers:
+        - event: Claimed(address[],uint256[])
+          handler: handleClaimed
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+      file: ./src/receipt-wallet-logic.ts
+  - kind: ethereum
+    name: MockUSDT
+    network: matic
+    source:
+      address: "0xea5befc10f6be711bcc64dec2527f14bf87d7ab3"
+      abi: MockUSDT
+      startBlock: 79561076
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - Approval
+        - MockUSDTRoleAdminChanged
+        - MockUSDTRoleGranted
+        - MockUSDTRoleRevoked
+        - Transfer
+      abis:
+        - name: MockUSDT
+          file: ./abis/MockUSDT.json
+      eventHandlers:
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mock-usdt.ts
+  - kind: ethereum
+    name: MockUSDC
+    network: matic
+    source:
+      address: "0xa7635ef412c2319a7b4261fc289feda2348ad632"
+      abi: MockUSDC
+      startBlock: 79561076
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - MockUSDCApproval
+        - MockUSDCRoleAdminChanged
+        - MockUSDCRoleGranted
+        - MockUSDCRoleRevoked
+        - MockUSDCTransfer
+      abis:
+        - name: MockUSDC
+          file: ./abis/MockUSDC.json
+      eventHandlers:
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleApproval
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mock-usdc.ts

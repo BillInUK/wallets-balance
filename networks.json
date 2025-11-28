@@ -1,0 +1,17 @@
+{
+  "matic": {
+    "SplitWallet": {
+      "address": "0x52b86e8a60e7f9918cc91600b8395ac736ac182a",
+      "startBlock": 79561076
+    },
+    "ReceiptWalletLogic": {
+      "address": "0x37f3461c40a9f05067585b594b8ef88eb77e1f94"
+    },
+    "MockUSDT": {
+      "address": "0xea5befc10f6be711bcc64dec2527f14bf87d7ab3"
+    },
+    "MockUSDC": {
+      "address": "0xa7635ef412c2319a7b4261fc289feda2348ad632"
+    }
+  }
+}

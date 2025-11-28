@@ -119,7 +119,7 @@ dataSources:
         - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
           handler: handleRoleRevoked
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
+          handler: handleUsdtTransfer
       file: ./src/mock-usdt.ts
   - kind: ethereum
     name: MockUSDC
@@ -151,5 +151,5 @@ dataSources:
         - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
           handler: handleRoleRevoked
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
+          handler: handleUsdcTransfer
       file: ./src/mock-usdc.ts

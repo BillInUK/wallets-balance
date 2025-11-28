@@ -248,3 +248,46 @@ export function handleReceiptWalletCreated(event: ReceiptWalletCreatedEvent): vo
     receiptWallet.save(); // 必须调用save()！
   }
 }
+
+
+// export function handleUsdtTransfer(event: UsdtTransferEvent): void {
+//   // ===== 处理转入逻辑 =====
+//   const toAddress = event.params.to;
+//   const toWalletId = toAddress.toHex();
+//   // 加载接收方的ReceiptWallet实体（必须是已创建的子钱包）
+//   let receiptWallet = ReceiptWallet.load(toWalletId);
+//   if (receiptWallet) {
+//     // 使用BigInt.plus()累加余额（AssemblyScript不支持+运算符）
+//     receiptWallet.usdtBalance = receiptWallet.usdtBalance.plus(event.params.value);
+//     receiptWallet.save(); // 关键：保存更新！
+//     // 可选：打印日志（本地调试用）
+//     // log.info(`Updated USDT balance for ${toWalletId}: ${receiptWallet.usdtBalance}`, []);
+//   }
+
+//   // ===== 处理转出逻辑 =====
+//   const fromAddress = event.params.from;
+//   const fromWalletId = fromAddress.toHex();
+//   receiptWallet = ReceiptWallet.load(fromWalletId);
+//   if (receiptWallet) {
+//     // 使用BigInt.minus()扣除余额
+//     receiptWallet.usdtBalance = receiptWallet.usdtBalance.minus(event.params.value);
+//     receiptWallet.save(); // 关键：保存更新！
+//   }
+// }
+
+// // MockUSDC同理
+// export function handleUsdcTransfer(event: UsdcTransferEvent): void {
+//   const toWalletId = event.params.to.toHex();
+//   let receiptWallet = ReceiptWallet.load(toWalletId);
+//   if (receiptWallet) {
+//     receiptWallet.usdcBalance = receiptWallet.usdcBalance.plus(event.params.value);
+//     receiptWallet.save();
+//   }
+
+//   const fromWalletId = event.params.from.toHex();
+//   receiptWallet = ReceiptWallet.load(fromWalletId);
+//   if (receiptWallet) {
+//     receiptWallet.usdcBalance = receiptWallet.usdcBalance.minus(event.params.value);
+//     receiptWallet.save();
+//   }
+// }

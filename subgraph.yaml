@@ -94,20 +94,21 @@ dataSources:
 templates:
   - kind: ethereum/contract
     name: ERC20
-    network: matic # 与上方网络一致
+    network: matic # 必须与SplitWallet数据源的network完全一致（如matic/polygon-mumbai）
     source:
-      abi: ERC20 # 通用ERC20 ABI
+      abi: ERC20
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.9
+      apiVersion: 0.0.8
       language: wasm/assemblyscript
       entities:
+        - Transfer
         - ERC20Token
         - ERC20Balance
       abis:
         - name: ERC20
-          file: ./abis/ERC20.json # 通用ERC20 ABI文件（包含Transfer事件+元数据函数）
+          file: ./abis/ERC20.json # 确保ABI包含Transfer事件
       eventHandlers:
-        - event: Transfer(indexed address,indexed address,uint256)
+        - event: Transfer(indexed address,indexed address,uint256) # 与ABI签名完全一致
           handler: handleTransfer
       file: ./src/erc20.ts

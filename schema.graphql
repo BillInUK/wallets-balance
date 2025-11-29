@@ -171,10 +171,11 @@ type Approval @entity(immutable: true) {
 }
 
 type Transfer @entity(immutable: true) {
-  id: Bytes!
+  id: ID! # 改为ID!（字符串），而非Bytes!
   from: Bytes! # address
   to: Bytes! # address
   value: BigInt! # uint256
+  token: ERC20Token! # 新增关联ERC20Token，方便查询
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -189,12 +190,12 @@ type ReceiptWallet @entity(immutable: false){
 }
 
 # 存储ERC20代币基本信息
-type ERC20Token @entity (immutable: false){
+type ERC20Token @entity(immutable: false) { # 改为false
   id: ID! # 代币合约地址（主键）
   name: String # 代币名称（可选）
   symbol: String # 代币符号（可选）
   decimals: Int # 代币小数位（可选）
-  balances: [ERC20Balance!]! @derivedFrom(field: "token") # 关联的所有余额记录
+  balances: [ERC20Balance!]! @derivedFrom(field: "token")
 }
 
 # 存储某钱包在某代币中的余额

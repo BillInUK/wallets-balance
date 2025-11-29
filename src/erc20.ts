@@ -1,25 +1,42 @@
-import { Transfer } from "../generated/templates/ERC20/ERC20"; // 事件也从合约类型导入
-import { ReceiptWallet, ERC20Token, ERC20Balance } from "../generated/schema";
-import { ERC20 } from "../generated/templates/ERC20/ERC20"; // ABI合约类
+import { Address, BigInt, log } from "@graphprotocol/graph-ts";
+import { Transfer as ERC20TransferEvent } from "../generated/templates/ERC20/ERC20"; // 重命名事件类型
+import { ERC20 } from "../generated/templates/ERC20/ERC20"; // 合约类
 import { ERC20 as ERC20Template } from "../generated/templates"; // 模板类型
-import { Address, BigInt } from "@graphprotocol/graph-ts";
+import { Transfer, ReceiptWallet, ERC20Token, ERC20Balance } from "../generated/schema"; // schema实体
 
-export function handleTransfer(event: Transfer): void {
-  const tokenAddress = event.address.toHexString();
-  const fromAddress = event.params.from.toHexString();
-  const toAddress = event.params.to.toHexString();
+export function handleTransfer(event: ERC20TransferEvent): void {
+  const tokenAddress = event.address.toHexString().toLowerCase();
+  const fromAddress = event.params.from;
+  const toAddress = event.params.to;
   const value = event.params.value;
 
-  // 检查转入地址是否为收款钱包
-  const toWallet = ReceiptWallet.load(toAddress);
-  if (toWallet) {
-    updateWalletBalance(toAddress, tokenAddress, value);
+  // 创建Transfer实体（schema定义的）
+  const transferId = `${tokenAddress}-${event.block.number.toString()}-${event.logIndex.toString()}`;
+  let transferEntity = Transfer.load(transferId);
+  if (!transferEntity) {
+    transferEntity = new Transfer(transferId);
+    transferEntity.from = fromAddress;
+    transferEntity.to = toAddress;
+    transferEntity.value = value;
+    transferEntity.token = tokenAddress; // 关联ERC20Token实体的id
+    transferEntity.blockNumber = event.block.number;
+    transferEntity.blockTimestamp = event.block.timestamp;
+    transferEntity.transactionHash = event.transaction.hash;
+    transferEntity.save();
   }
 
-  // 检查转出地址是否为收款钱包
-  const fromWallet = ReceiptWallet.load(fromAddress);
+  // 处理转入钱包的余额
+  const toWalletId = toAddress.toHexString().toLowerCase();
+  const toWallet = ReceiptWallet.load(toWalletId);
+  if (toWallet) {
+    updateWalletBalance(toWalletId, tokenAddress, value);
+  }
+
+  // 处理转出钱包的余额
+  const fromWalletId = fromAddress.toHexString().toLowerCase();
+  const fromWallet = ReceiptWallet.load(fromWalletId);
   if (fromWallet) {
-    updateWalletBalance(fromAddress, tokenAddress, value.neg());
+    updateWalletBalance(fromWalletId, tokenAddress, value.neg());
   }
 }
 
@@ -29,18 +46,16 @@ function updateWalletBalance(walletAddress: string, tokenAddress: string, delta:
 
   if (!balance) {
     balance = new ERC20Balance(balanceId);
-    balance.wallet = walletAddress;
-    balance.token = tokenAddress;
+    balance.wallet = walletAddress; // 关联ReceiptWallet实体的id
+    balance.token = tokenAddress;   // 关联ERC20Token实体的id
     balance.balance = BigInt.fromI32(0);
 
+    // 创建ERC20Token实体（如果不存在）
     let token = ERC20Token.load(tokenAddress);
     if (!token) {
       token = new ERC20Token(tokenAddress);
-      
-      // 正确绑定ERC20合约（使用ABI生成的合约类）
       const erc20Contract = ERC20.bind(Address.fromString(tokenAddress));
       
-      // 安全调用合约函数（try_前缀避免报错）
       const nameResult = erc20Contract.try_name();
       if (!nameResult.reverted) {
         token.name = nameResult.value;
@@ -57,12 +72,12 @@ function updateWalletBalance(walletAddress: string, tokenAddress: string, delta:
       }
 
       token.save();
-
-      // 使用模板类型创建动态数据源（关键！之前混用了合约类和模板）
+      // 创建ERC20模板数据源
       ERC20Template.create(Address.fromString(tokenAddress));
     }
   }
 
+  // 更新余额
   balance.balance = balance.balance.plus(delta);
   balance.save();
 }

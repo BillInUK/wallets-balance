@@ -213,7 +213,7 @@ export function handleTokenClaimed(event: TokenClaimedEvent): void {
 
 export function handleReceiptWalletCreated(event: ReceiptWalletCreated): void {
   // 2. 正确获取事件参数（强类型事件对象才有params属性）
-  const walletAddress = event.params.wallet.toHexString(); // 确保params存在且是Address类型
+  const walletAddress = event.params.wallet.toHexString().toLowerCase(); // 确保params存在且是Address类型
   let receiptWallet = ReceiptWallet.load(walletAddress); // ReceiptWallet的id是string类型
 
   if (!receiptWallet) {

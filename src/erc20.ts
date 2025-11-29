@@ -1,7 +1,7 @@
 import { Address, BigInt, log } from "@graphprotocol/graph-ts";
 import { Transfer as ERC20TransferEvent } from "../generated/templates/ERC20/ERC20"; // 重命名事件类型
 import { ERC20 } from "../generated/templates/ERC20/ERC20"; // 合约类
-import { Transfer, ReceiptWallet, ERC20Token, ERC20Balance, TokenTotal } from "../generated/schema"; // schema实体
+import { ReceiptWallet, ERC20Token, ERC20Balance, SplitWalletTokenTotal } from "../generated/schema"; // 移除TokenTotal导入
 import { TOKEN_WHITELIST } from "./constants";
 
 export function handleTransfer(event: ERC20TransferEvent): void {
@@ -74,18 +74,30 @@ function updateWalletBalance(walletAddress: string, tokenAddress: string, delta:
   balance.balance = balance.balance.plus(delta);
   balance.save();
 
-  // 同步更新Token总余额
-  updateTokenTotalBalance(tokenAddress, delta);
+  // ========== 同步更新SplitWallet+Token的分组总余额 ==========
+  const receiptWallet = ReceiptWallet.load(walletAddress);
+  if (receiptWallet) {
+    const splitWalletAddress = receiptWallet.createdBy; // 获取所属SplitWallet地址
+    updateSplitWalletTokenTotal(splitWalletAddress, tokenAddress, delta);
+  }
 }
 
-// 同步更新Token总余额
-function updateTokenTotalBalance(tokenAddress: string, delta: BigInt): void {
-  let tokenTotal = TokenTotal.load(tokenAddress);
-  if (!tokenTotal) {
-    tokenTotal = new TokenTotal(tokenAddress);
-    tokenTotal.token = tokenAddress;
-    tokenTotal.totalBalance = BigInt.fromI32(0);
+// 同步更新SplitWallet+Token的分组总余额（核心逻辑）
+function updateSplitWalletTokenTotal(splitWalletAddress: string, tokenAddress: string, delta: BigInt): void {
+  // 构造分组统计的主键：splitWallet地址 + "-" + token地址
+  const splitTokenTotalId = `${splitWalletAddress}-${tokenAddress}`;
+  let splitTokenTotal = SplitWalletTokenTotal.load(splitTokenTotalId);
+
+  if (!splitTokenTotal) {
+    splitTokenTotal = new SplitWalletTokenTotal(splitTokenTotalId);
+    splitTokenTotal.splitWallet = splitWalletAddress;
+    splitTokenTotal.token = tokenAddress; // 关联ERC20Token实体
+    splitTokenTotal.totalBalance = BigInt.fromI32(0);
   }
-  tokenTotal.totalBalance = tokenTotal.totalBalance.plus(delta);
-  tokenTotal.save();
+
+  // 更新分组总余额（delta为正：增加；delta为负：减少）
+  splitTokenTotal.totalBalance = splitTokenTotal.totalBalance.plus(delta);
+  splitTokenTotal.save();
+
+  log.info("更新SplitWallet[{}]的Token[{}]总余额：{}", [splitWalletAddress, tokenAddress, splitTokenTotal.totalBalance.toString()]);
 }

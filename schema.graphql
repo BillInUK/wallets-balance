@@ -210,7 +210,9 @@ type TokenTotal @entity(immutable: false) {
   id: ID! # 代币合约地址
   token: ERC20Token!
   totalBalance: BigInt! # 所有钱包的该代币总余额
-}type SingletonFactoryDeployed @entity(immutable: true) {
+}
+
+type SingletonFactoryDeployed @entity(immutable: true) {
   id: Bytes!
   createdContract: Bytes! # address
   salt: Bytes! # bytes32
@@ -254,3 +256,10 @@ type SplitWalletInstance @entity(immutable: true) {
   deployedBy: String! # 部署者（SingletonFactory地址）
 }
 
+# 按SplitWallet地址+Token地址分组的未归集总额
+type SplitWalletTokenTotal @entity(immutable: false) {
+  id: ID! # 主键：splitWallet地址 + "-" + token地址
+  splitWallet: String! # SplitWallet合约地址（createdBy）
+  token: ERC20Token! # 关联的ERC20代币
+  totalBalance: BigInt! # 该SplitWallet下所有ReceiptWallet的该Token总余额
+}

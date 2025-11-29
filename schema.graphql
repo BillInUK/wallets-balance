@@ -159,41 +159,12 @@ type ReceiptWalletLogicRoleRevoked @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
 type Approval @entity(immutable: true) {
   id: Bytes!
   owner: Bytes! # address
   spender: Bytes! # address
   value: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type MockUSDTRoleAdminChanged @entity(immutable: true) {
-  id: Bytes!
-  role: Bytes! # bytes32
-  previousAdminRole: Bytes! # bytes32
-  newAdminRole: Bytes! # bytes32
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type MockUSDTRoleGranted @entity(immutable: true) {
-  id: Bytes!
-  role: Bytes! # bytes32
-  account: Bytes! # address
-  sender: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type MockUSDTRoleRevoked @entity(immutable: true) {
-  id: Bytes!
-  role: Bytes! # bytes32
-  account: Bytes! # address
-  sender: Bytes! # address
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -208,74 +179,28 @@ type Transfer @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
-type MockUSDCApproval @entity(immutable: true) {
-  id: Bytes!
-  owner: Bytes! # address
-  spender: Bytes! # address
-  value: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
+
+# 存储由SplitWallet创建的收款钱包信息
+type ReceiptWallet @entity(immutable: false){
+  id: ID! # 钱包地址（主键）
+  createdBy: Bytes! # 对应的SplitWallet合约地址
+  createdAt: BigInt! # 创建时间（区块时间戳）
+  erc20Balances: [ERC20Balance!]! @derivedFrom(field: "wallet") # 关联的所有ERC20余额
 }
 
-type MockUSDCRoleAdminChanged @entity(immutable: true) {
-  id: Bytes!
-  role: Bytes! # bytes32
-  previousAdminRole: Bytes! # bytes32
-  newAdminRole: Bytes! # bytes32
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
+# 存储ERC20代币基本信息
+type ERC20Token @entity (immutable: true){
+  id: ID! # 代币合约地址（主键）
+  name: String # 代币名称（可选）
+  symbol: String # 代币符号（可选）
+  decimals: Int # 代币小数位（可选）
+  balances: [ERC20Balance!]! @derivedFrom(field: "token") # 关联的所有余额记录
 }
 
-type MockUSDCRoleGranted @entity(immutable: true) {
-  id: Bytes!
-  role: Bytes! # bytes32
-  account: Bytes! # address
-  sender: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type MockUSDCRoleRevoked @entity(immutable: true) {
-  id: Bytes!
-  role: Bytes! # bytes32
-  account: Bytes! # address
-  sender: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type MockUSDCTransfer @entity(immutable: true) {
-  id: Bytes!
-  from: Bytes! # address
-  to: Bytes! # address
-  value: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-# SplitWallet实体（可变，因为可能关联新的子钱包）
-type SplitWallet @entity(immutable: false) {
-  id: ID! # SplitWallet合约地址（主键）
-  receiptWallets: [ReceiptWallet!]! @derivedFrom(field: "splitWallet") # 反向关联子钱包
-}
-
-# ReceiptWallet实体（可变，余额会动态更新）
-type ReceiptWallet @entity(immutable: false) {
-  id: ID! # 子钱包地址（主键）
-  usdtBalance: BigInt! # 动态更新的余额
-  usdcBalance: BigInt!
-  splitWallet: SplitWallet! # 关联所属SplitWallet
-  createdBlock: BigInt!
-  createdTimestamp: BigInt!
-}
-
-type TotalBalance @entity(immutable: false) {
-  id: ID! # 固定为"total"
-  totalUSDT: BigInt!
-  totalUSDC: BigInt!
+# 存储某钱包在某代币中的余额
+type ERC20Balance @entity (immutable: false){
+  id: ID! # 主键：钱包地址 + "-" + 代币地址（例如："0x...-0x..."）
+  wallet: ReceiptWallet! # 关联的收款钱包
+  token: ERC20Token! # 关联的ERC20代币
+  balance: BigInt! # 余额（初始为0，随转账事件更新）
 }

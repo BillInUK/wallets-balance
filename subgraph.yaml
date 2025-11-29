@@ -89,67 +89,25 @@ dataSources:
         - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
           handler: handleRoleRevoked
       file: ./src/receipt-wallet-logic.ts
-  - kind: ethereum
-    name: MockUSDT
-    network: matic
+
+# 动态ERC20模板（自动跟踪所有与收款钱包交互的ERC20代币）
+templates:
+  - kind: ethereum/contract
+    name: ERC20
+    network: matic # 与上方网络一致
     source:
-      address: "0xea5befc10f6be711bcc64dec2527f14bf87d7ab3"
-      abi: MockUSDT
-      startBlock: 79561076
+      abi: ERC20 # 通用ERC20 ABI
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.9
+      apiVersion: 0.0.8
       language: wasm/assemblyscript
       entities:
-        - Approval
-        - MockUSDTRoleAdminChanged
-        - MockUSDTRoleGranted
-        - MockUSDTRoleRevoked
-        - Transfer
+        - ERC20Token
+        - ERC20Balance
       abis:
-        - name: MockUSDT
-          file: ./abis/MockUSDT.json
+        - name: ERC20
+          file: ./abis/ERC20.json # 通用ERC20 ABI文件（包含Transfer事件+元数据函数）
       eventHandlers:
-        - event: Approval(indexed address,indexed address,uint256)
-          handler: handleApproval
-        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
-          handler: handleRoleAdminChanged
-        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
-          handler: handleRoleGranted
-        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
-          handler: handleRoleRevoked
         - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleUsdtTransfer
-      file: ./src/mock-usdt.ts
-  - kind: ethereum
-    name: MockUSDC
-    network: matic
-    source:
-      address: "0xa7635ef412c2319a7b4261fc289feda2348ad632"
-      abi: MockUSDC
-      startBlock: 79561076
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.9
-      language: wasm/assemblyscript
-      entities:
-        - MockUSDCApproval
-        - MockUSDCRoleAdminChanged
-        - MockUSDCRoleGranted
-        - MockUSDCRoleRevoked
-        - MockUSDCTransfer
-      abis:
-        - name: MockUSDC
-          file: ./abis/MockUSDC.json
-      eventHandlers:
-        - event: Approval(indexed address,indexed address,uint256)
-          handler: handleApproval
-        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
-          handler: handleRoleAdminChanged
-        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
-          handler: handleRoleGranted
-        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
-          handler: handleRoleRevoked
-        - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleUsdcTransfer
-      file: ./src/mock-usdc.ts
+          handler: handleTransfer
+      file: ./src/erc20.ts

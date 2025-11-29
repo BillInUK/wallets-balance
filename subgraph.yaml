@@ -99,7 +99,7 @@ templates:
       abi: ERC20
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.8
+      apiVersion: 0.0.9
       language: wasm/assemblyscript
       entities:
         - Transfer

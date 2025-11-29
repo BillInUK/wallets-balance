@@ -9,6 +9,33 @@ export function handleTransfer(event: ERC20TransferEvent): void {
   const fromAddress = event.params.from;
   const toAddress = event.params.to;
   const value = event.params.value;
+  
+  log.info("===== Transfer Event Captured =====", []); // 先打印日志，确认事件是否进入函数
+  log.info("Token: {}", [event.address.toHexString()]);
+  log.info("To: {}", [event.params.to.toHexString()]);
+  log.info("From: {}", [event.params.from.toHexString()]);
+  log.info("Value: {}", [event.params.value.toString()]);
+
+  // ========== 关键修改：提前创建模板（不管钱包是否存在） ==========
+  let token = ERC20Token.load(tokenAddress);
+  if (!token) {
+    token = new ERC20Token(tokenAddress);
+    const erc20Contract = ERC20.bind(Address.fromString(tokenAddress));
+    
+    const nameResult = erc20Contract.try_name();
+    if (!nameResult.reverted) token.name = nameResult.value;
+
+    const symbolResult = erc20Contract.try_symbol();
+    if (!symbolResult.reverted) token.symbol = symbolResult.value;
+
+    const decimalsResult = erc20Contract.try_decimals();
+    if (!decimalsResult.reverted) token.decimals = decimalsResult.value;
+
+    token.save();
+    // 立即创建模板，无需等待钱包存在
+    ERC20Template.create(Address.fromString(tokenAddress));
+    log.info("ERC20模板已创建：{}", [tokenAddress]);
+  }
 
   // 创建Transfer实体（schema定义的）
   const transferId = `${tokenAddress}-${event.block.number.toString()}-${event.logIndex.toString()}`;
@@ -18,25 +45,27 @@ export function handleTransfer(event: ERC20TransferEvent): void {
     transferEntity.from = fromAddress;
     transferEntity.to = toAddress;
     transferEntity.value = value;
-    transferEntity.token = tokenAddress; // 关联ERC20Token实体的id
+    transferEntity.token = tokenAddress;
     transferEntity.blockNumber = event.block.number;
     transferEntity.blockTimestamp = event.block.timestamp;
     transferEntity.transactionHash = event.transaction.hash;
     transferEntity.save();
+    log.info("Transfer实体已创建：{}", [transferId]);
   }
 
-  // 处理转入钱包的余额
+  // 处理余额更新（原有逻辑）
   const toWalletId = toAddress.toHexString().toLowerCase();
   const toWallet = ReceiptWallet.load(toWalletId);
   if (toWallet) {
     updateWalletBalance(toWalletId, tokenAddress, value);
+    log.info("更新收款钱包{}的{}余额：+{}", [toWalletId, tokenAddress, value.toString()]);
   }
 
-  // 处理转出钱包的余额
   const fromWalletId = fromAddress.toHexString().toLowerCase();
   const fromWallet = ReceiptWallet.load(fromWalletId);
   if (fromWallet) {
     updateWalletBalance(fromWalletId, tokenAddress, value.neg());
+    log.info("更新收款钱包{}的{}余额：-{}", [fromWalletId, tokenAddress, value.toString()]);
   }
 }
 

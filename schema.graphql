@@ -210,4 +210,47 @@ type TokenTotal @entity(immutable: false) {
   id: ID! # 代币合约地址
   token: ERC20Token!
   totalBalance: BigInt! # 所有钱包的该代币总余额
+}type SingletonFactoryDeployed @entity(immutable: true) {
+  id: Bytes!
+  createdContract: Bytes! # address
+  salt: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
 }
+type AdminChanged @entity(immutable: true) {
+  id: Bytes!
+  previousAdmin: Bytes! # address
+  newAdmin: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BeaconUpgraded @entity(immutable: true) {
+  id: Bytes!
+  beacon: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Upgraded @entity(immutable: true) {
+  id: Bytes!
+  implementation: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+# 记录所有部署的SplitWalletLogic合约实例
+type SplitWalletInstance @entity(immutable: true) {
+  id: ID! # 合约地址（主键）
+  serviceType: Int! # 来自Deployed事件的SERVICE_TYPE
+  subServiceType: Int! # SUB_SERVICE_TYPE
+  majorVersion: Int! # MAJOR_VERSION
+  minorVersion: Int! # MINOR_VERSION
+  deployedAt: BigInt! # 部署区块时间戳
+  deployedBy: String! # 部署者（SingletonFactory地址）
+}
+

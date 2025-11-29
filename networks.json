@@ -12,6 +12,12 @@
     },
     "MockUSDC": {
       "address": "0xa7635ef412c2319a7b4261fc289feda2348ad632"
+    },
+    "SingletonFactory": {
+      "address": "0xd4c329c0d4f7818381fa76ac1b3e955c7a2d3764"
+    },
+    "ServiceProxy": {
+      "address": "0x52b86e8a60e7f9918cc91600b8395ac736ac182a"
     }
   }
 }

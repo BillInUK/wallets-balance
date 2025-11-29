@@ -5,6 +5,28 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
+    name: SingletonFactory
+    network: matic
+    source:
+      address: "0xd4c329c0d4f7818381fa76ac1b3e955c7a2d3764"
+      abi: SingletonFactory
+      startBlock: 79647387
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - SplitWalletInstance
+      abis:
+        - name: SingletonFactory
+          file: ./abis/SingletonFactory.json
+        - name: SplitWallet
+          file: ./abis/SplitWallet.json
+      eventHandlers:
+        - event: Deployed(address,bytes32)
+          handler: handleSingletonDeployed
+      file: ./src/singleton-factory.ts
+  - kind: ethereum
     name: SplitWallet
     network: matic
     source:
@@ -89,12 +111,37 @@ dataSources:
         - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
           handler: handleRoleRevoked
       file: ./src/receipt-wallet-logic.ts
+  - kind: ethereum
+    name: ServiceProxy
+    network: matic
+    source:
+      address: "0x52b86e8a60e7f9918cc91600b8395ac736ac182a"
+      abi: ServiceProxy
+      startBlock: 79647387
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - AdminChanged
+        - BeaconUpgraded
+        - Upgraded
+      abis:
+        - name: ServiceProxy
+          file: ./abis/ServiceProxy.json
+      eventHandlers:
+        - event: AdminChanged(address,address)
+          handler: handleAdminChanged
+        - event: BeaconUpgraded(indexed address)
+          handler: handleBeaconUpgraded
+        - event: Upgraded(indexed address)
+          handler: handleUpgraded
+      file: ./src/service-proxy.ts
 
-# 动态ERC20模板（自动跟踪所有与收款钱包交互的ERC20代币）
 templates:
-  - kind: ethereum/contract
-    name: ERC20
-    network: matic # 必须与SplitWallet数据源的network完全一致（如matic/polygon-mumbai）
+  - name: ERC20
+    kind: ethereum/contract
+    network: matic
     source:
       abi: ERC20
     mapping:
@@ -107,8 +154,63 @@ templates:
         - ERC20Balance
       abis:
         - name: ERC20
-          file: ./abis/ERC20.json # 确保ABI包含Transfer事件
+          file: ./abis/ERC20.json
       eventHandlers:
-        - event: Transfer(indexed address,indexed address,uint256) # 与ABI签名完全一致
+        - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
       file: ./src/erc20.ts
+
+  - name: SplitWallet
+    kind: ethereum/contract
+    network: matic
+    source:
+      abi: SplitWallet
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      entities:
+        - ClaimETH
+        - Deployed
+        - ERC20PaymentReleased
+        - ERC20TokensReleased
+        - Initialized
+        - PayeeAdded
+        - PaymentReceived
+        - PaymentReleased
+        - ReceiptWalletCreated
+        - RoleAdminChanged
+        - RoleGranted
+        - RoleRevoked
+        - TokenClaimed
+      abis:
+        - name: SplitWallet
+          file: ./abis/SplitWallet.json
+      eventHandlers:
+        - event: ClaimETH(uint256,uint256)
+          handler: handleClaimETH
+        - event: Deployed(indexed uint16,indexed uint16,uint16,uint16)
+          handler: handleDeployed
+        - event: ERC20PaymentReleased(indexed address,indexed address,uint256)
+          handler: handleERC20PaymentReleased
+        - event: ERC20TokensReleased(indexed address,address[],uint256[])
+          handler: handleERC20TokensReleased
+        - event: Initialized(uint8)
+          handler: handleInitialized
+        - event: PayeeAdded(indexed address,indexed address,indexed uint256)
+          handler: handlePayeeAdded
+        - event: PaymentReceived(indexed address,uint256)
+          handler: handlePaymentReceived
+        - event: PaymentReleased(indexed address,uint256)
+          handler: handlePaymentReleased
+        - event: ReceiptWalletCreated(indexed address)
+          handler: handleReceiptWalletCreated
+        - event: RoleAdminChanged(indexed bytes32,indexed bytes32,indexed bytes32)
+          handler: handleRoleAdminChanged
+        - event: RoleGranted(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleGranted
+        - event: RoleRevoked(indexed bytes32,indexed address,indexed address)
+          handler: handleRoleRevoked
+        - event: TokenClaimed(address[],uint256[],uint256)
+          handler: handleTokenClaimed
+      file: ./src/split-wallet.ts

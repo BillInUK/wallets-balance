@@ -28,8 +28,8 @@ import {
   TokenClaimed
 } from "../generated/schema"
 import { BigInt, Bytes, log } from "@graphprotocol/graph-ts"
-import { ReceiptWalletCreated } from "../generated/SplitWallet/SplitWallet";
-import { ReceiptWallet } from "../generated/schema";
+import { ReceiptWalletCreated,Deployed as SplitWalletDeployedEvent} from "../generated/SplitWallet/SplitWallet";
+import { ReceiptWallet,SplitWalletInstance } from "../generated/schema";
 import { ERC20 as ERC20Template } from "../generated/templates";
 import { Address } from "@graphprotocol/graph-ts";
 import { TOKEN_WHITELIST } from "./constants";
@@ -218,6 +218,20 @@ export function handleTokenClaimed(event: TokenClaimedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+}
+
+export function handleSplitWalletDeployed(event: SplitWalletDeployedEvent): void {
+  const contractAddress = event.address.toHex() // 新创建的SplitWallet地址
+  const instance = SplitWalletInstance.load(contractAddress)
+  
+  if (instance) {
+    // 更新Deployed事件中的版本参数
+    instance.serviceType = event.params.serviceType;
+    instance.subServiceType = event.params.subServiceType;
+    instance.majorVersion = event.params.majorVersion;
+    instance.minorVersion = event.params.minorVersion;
+    instance.save()
+  }
 }
 
 export function handleReceiptWalletCreated(event: ReceiptWalletCreated): void {

@@ -22,14 +22,14 @@ import {
   PayeeAdded,
   PaymentReceived,
   PaymentReleased,
-  ReceiptWalletCreated,
   RoleAdminChanged,
   RoleGranted,
   RoleRevoked,
   TokenClaimed
 } from "../generated/schema"
 import { BigInt, Bytes } from "@graphprotocol/graph-ts"
-import { SplitWallet, ReceiptWallet } from "../generated/schema";
+import { ReceiptWalletCreated } from "../generated/SplitWallet/SplitWallet";
+import { ReceiptWallet } from "../generated/schema";
 
 export function handleClaimETH(event: ClaimETHEvent): void {
   let entity = new ClaimETH(
@@ -212,14 +212,14 @@ export function handleTokenClaimed(event: TokenClaimedEvent): void {
 }
 
 export function handleReceiptWalletCreated(event: ReceiptWalletCreated): void {
-  // 以钱包地址为ID创建实体
-  const walletAddress = event.params.wallet.toHexString()
-  let receiptWallet = ReceiptWallet.load(walletAddress)
-  
+  // 2. 正确获取事件参数（强类型事件对象才有params属性）
+  const walletAddress = event.params.wallet.toHexString(); // 确保params存在且是Address类型
+  let receiptWallet = ReceiptWallet.load(walletAddress); // ReceiptWallet的id是string类型
+
   if (!receiptWallet) {
-    receiptWallet = new ReceiptWallet(walletAddress)
-    receiptWallet.createdBy = event.address // 记录创建它的SplitWallet合约地址
-    receiptWallet.createdAt = event.block.timestamp // 记录创建时间
-    receiptWallet.save()
+    receiptWallet = new ReceiptWallet(walletAddress); // id必须是string
+    receiptWallet.createdBy = event.address.toHexString(); // event.address是Address类型，转string
+    receiptWallet.createdAt = event.block.timestamp; // event.block是Block类型，timestamp是BigInt
+    receiptWallet.save();
   }
 }

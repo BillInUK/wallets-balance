@@ -189,7 +189,7 @@ type ReceiptWallet @entity(immutable: false){
 }
 
 # 存储ERC20代币基本信息
-type ERC20Token @entity (immutable: true){
+type ERC20Token @entity (immutable: false){
   id: ID! # 代币合约地址（主键）
   name: String # 代币名称（可选）
   symbol: String # 代币符号（可选）

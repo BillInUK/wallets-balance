@@ -32,6 +32,7 @@ import { ReceiptWalletCreated } from "../generated/SplitWallet/SplitWallet";
 import { ReceiptWallet } from "../generated/schema";
 import { ERC20 as ERC20Template } from "../generated/templates";
 import { Address } from "@graphprotocol/graph-ts";
+import { TOKEN_WHITELIST } from "./constants";
 
 export function handleClaimETH(event: ClaimETHEvent): void {
   let entity = new ClaimETH(
@@ -61,6 +62,12 @@ export function handleDeployed(event: DeployedEvent): void {
   entity.transactionHash = event.transaction.hash
 
   entity.save()
+
+  // ========== 手动创建常用代币模板 ==========
+  TOKEN_WHITELIST.forEach((tokenAddr) => {
+    ERC20Template.create(Address.fromString(tokenAddr));
+    log.info("为白名单Token创建模板: {}", [tokenAddr]);
+  });
 }
 
 export function handleERC20PaymentReleased(
@@ -224,22 +231,5 @@ export function handleReceiptWalletCreated(event: ReceiptWalletCreated): void {
     receiptWallet.createdAt = event.block.timestamp; // event.block是Block类型，timestamp是BigInt
     receiptWallet.save();
     log.info("收款钱包已创建：{}", [walletAddress]);
-
-    // ========== 手动创建常用代币模板 ==========
-    const usdtAddress = Address.fromString("0xc2132d05d31c914a87c6611c10748aeb04b58e8f"); // Polygon MockUSDT
-    ERC20Template.create(usdtAddress);
-    log.info("手动为地址 {} 创建 USDT 模板",[walletAddress]);
-
-    const usdcAddress = Address.fromString("0x2791bca1f2de4661ed88a30c99a7a9449aa84174"); // Polygon MockUSDT
-    ERC20Template.create(usdcAddress);
-    log.info("手动为地址 {} 创建 USDC 模板",[walletAddress]);
-
-    const mockUSDTAddress = Address.fromString("0xea5befc10f6be711bcc64dec2527f14bf87d7ab3"); // Polygon MockUSDT
-    ERC20Template.create(mockUSDTAddress);
-    log.info("手动为地址 {} 创建 MockUSDT 模板",[walletAddress]);
-
-    const mockUSDCAddress = Address.fromString("0xa7635ef412c2319a7b4261fc289feda2348ad632"); // Polygon MockUSDC
-    ERC20Template.create(mockUSDCAddress);
-    log.info("手动为自制 {} 创建 MockUSDC 模板",[walletAddress]);
   }
 }

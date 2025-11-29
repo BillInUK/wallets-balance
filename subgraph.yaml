@@ -8,9 +8,9 @@ dataSources:
     name: SplitWallet
     network: matic
     source:
-      address: "0x52b86e8a60e7f9918cc91600b8395ac736ac182a"
+      address: "0xdccc16d0da5e9eb0b18bac762b87e4144dcb9c9c"
       abi: SplitWallet
-      startBlock: 79561076
+      startBlock: 79647387
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9

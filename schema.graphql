@@ -205,3 +205,9 @@ type ERC20Balance @entity (immutable: false){
   token: ERC20Token! # 关联的ERC20代币
   balance: BigInt! # 余额（初始为0，随转账事件更新）
 }
+
+type TokenTotal @entity(immutable: false) {
+  id: ID! # 代币合约地址
+  token: ERC20Token!
+  totalBalance: BigInt! # 所有钱包的该代币总余额
+}
